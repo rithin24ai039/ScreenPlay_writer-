@@ -1,6 +1,6 @@
 # ScreenPlay
 
-A friendly screenplay-writing workspace built with HTML, CSS, and vanilla JavaScript. Supabase adds optional accounts and private cloud sync; local drafts work without an account.
+A friendly screenplay-writing workspace built with HTML, CSS, and vanilla JavaScript. Supabase provides email/password accounts, JWT-backed sessions, and private cloud sync; guest drafts remain on this device.
 
 ## Features
 
@@ -9,28 +9,25 @@ A friendly screenplay-writing workspace built with HTML, CSS, and vanilla JavaSc
 - Scene navigation, word/page estimates, character list, logline, genre, and notes.
 - Local autosave, dark/light theme, focus mode, and keyboard shortcuts.
 - Fountain export and browser print-to-PDF.
-- Optional Supabase email/password authentication and owner-protected cloud sync.
+- Supabase email/password authentication and owner-protected cloud sync.
 
 ## Run locally
 
 Serve the repository root with any static HTTP server, such as VS Code Live Server. The app loads Supabase JS as an ES module from a CDN.
 
-## Configure Supabase
+## Database and authentication
 
-1. Create a Supabase project.
-2. Run the SQL in supabase/schema.sql using Supabase SQL Editor.
-3. Copy the project URL and publishable key (or legacy anon key) from the project's API settings.
-4. Put those public values in config.js.
-5. In Supabase Authentication URL Configuration, add the deployed Vercel URL to the allowed redirect URLs.
-6. Do not use a service_role or secret key in this browser application.
+The live database is hosted in the Supabase project **screenplay-writer**. The `public.screenplays` table, indexes, and row-level security policies have been applied directly to Supabase; the database SQL is intentionally not stored in this GitHub repository.
 
-Without configuration, local writing and local autosave still work. Signed-in users can sync to their own Supabase rows, protected by row-level security.
+The browser uses the Supabase project URL and **publishable** key in `config.js`. Publishable keys are designed for browser use; never put a Supabase secret or `service_role` key in client-side code. Supabase Auth manages password verification, sessions, and JWT access tokens. Row Level Security restricts each signed-in user to their own screenplay rows.
+
+In Supabase Dashboard, set **Authentication → URL Configuration → Site URL** to the deployed Vercel URL and add that URL to **Redirect URLs**. If email confirmation is enabled, users must confirm the address before signing in. These settings may need to be completed in the dashboard.
 
 ## Deploy to Vercel
 
-Import rithin24ai039/ScreenPlay_writer- from GitHub. Select the Other framework preset, no build command, and the repository root as the output. Vercel can automatically deploy each push to the connected production branch.
+The static site is deployed to Vercel at https://screenplay-writer-psi.vercel.app. The repository is `rithin24ai039/ScreenPlay_writer-`. To enable automatic deployment on every push, connect the repository to the Vercel project through Vercel's Git settings.
 
-## Privacy and current limitations
+## Privacy and limitations
 
 Guest drafts stay in browser local storage. Browser data can be cleared, so export backups. Signed-in projects sync to Supabase and RLS restricts access to the owner. This version does not send scripts to an AI provider. PDF export uses the browser print dialog and page count is an estimate. Final Draft FDX, collaboration, and AI tools are not included yet.
 
