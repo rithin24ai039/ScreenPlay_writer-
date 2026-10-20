@@ -29,7 +29,7 @@ The static site is deployed to Vercel at https://screenplay-writer-psi.vercel.ap
 
 ## Privacy and limitations
 
-Sign-in is required to create or edit screenplays. Screenplay content is stored in Supabase only, with Row Level Security restricting access to the owner; it is not persisted in browser local storage. Theme preference may be stored locally. This version does not send scripts to an AI provider. PDF export uses the browser print dialog and page count is an estimate. Final Draft FDX, collaboration, and AI tools are not included yet.
+Sign-in is required to create or edit screenplays. Screenplay content is stored in Supabase only, with Row Level Security restricting access to the owner; it is not persisted in browser local storage. Supabase Auth persists the JWT access token and refresh token in browser storage so users remain signed in after refreshing the page, and it automatically refreshes sessions. Theme preference may be stored locally. This version does not send scripts to an AI provider. PDF export uses the browser print dialog and page count is an estimate. Final Draft FDX, collaboration, and AI tools are not included yet.
 
 ## License
 
