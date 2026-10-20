@@ -72,7 +72,8 @@ async function authSubmit(e){
       else if(/already registered|user already exists/i.test(message)) errorBox.textContent="That username is already taken. Choose another or switch to Sign in.";
       else if(/email not confirmed/i.test(message)) errorBox.textContent="Account confirmation is still enabled in Supabase. Follow the setup instructions to disable email confirmation.";
       else if(/password should be at least|weak password/i.test(message)) errorBox.textContent="Choose a stronger password that meets Supabase password requirements.";
-      else if(/rate limit|too many requests|429/i.test(message)) errorBox.textContent="Too many attempts. Wait a little before trying again.";
+      else if(/email rate limit|email sending|rate limit.*email/i.test(message)) errorBox.textContent="Supabase is still trying to send a confirmation email. Disable Confirm email in Supabase Auth settings, then wait for the current rate limit to clear before retrying.";
+      else if(/rate limit|too many requests|429/i.test(message)) errorBox.textContent="Supabase temporarily rate-limited authentication requests. Stop retrying and wait before trying again.";
       else errorBox.textContent=message;
       return;
     }
