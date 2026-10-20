@@ -44,7 +44,62 @@ function exportPdf(){const p=current();if(!p)return;const w=window.open("","_bla
 function sampleScript(){const p=makeProject("The First Line","blank",sample);p.logline="A blocked writer discovers that every beginning is a choice.";p.genre="Drama";state.projects.unshift(p);persist();renderDashboard();openProject(p.id);toast("Sample added. Make it your own!","success");}
 function account(){if(state.user&&db){if(confirm("Sign out of cloud sync? Your local drafts will remain on this device."))db.auth.signOut().then(()=>{state.user=null;accountUI();toast("Signed out. Local drafts remain on this device.");});}else if(!db)toast("Cloud sync will be available after Supabase is configured. Local writing works now.","error");else{$("authDialog").showModal();}}
 function accountUI(){$("accountName").textContent=state.user?.email||"Guest writer";$("accountStatus").textContent=state.user?"Cloud sync enabled":"Saved on this device";$("avatar").textContent=(state.user?.email?.[0]||"G").toUpperCase();}
-async function authSubmit(e){e.preventDefault();if(!db){$("authError").textContent="Cloud sync is not configured yet.";return;}const email=$("email").value.trim(),password=$("password").value;const result=state.authMode==="signup"?await db.auth.signUp({email,password}):await db.auth.signInWithPassword({email,password});if(result.error){$("authError").textContent=result.error.message;return;}if(state.authMode==="signup"&&!result.data.session){$("authError").textContent="Check your email for a confirmation link, then sign in.";return;}state.user=result.data.user;$("authDialog").close();accountUI();await loadCloud();toast("You're signed in.","success");}
+async function authSubmit(e){
+  e.preventDefault();
+  const submit = $("authSubmit");
+  const errorBox = $("authError");
+  errorBox.textContent = "";
+  if (!db) {
+    errorBox.textContent = "Sign-in is unavailable because Supabase is not configured. Please try again later.";
+    return;
+  }
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  submit.disabled = true;
+  submit.textContent = state.authMode === "signup" ? "Creating account…" : "Signing in…";
+  try {
+    const result = state.authMode === "signup"
+      ? await db.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } })
+      : await db.auth.signInWithPassword({ email, password });
+    if (result.error) {
+      console.error("Supabase authentication error:", result.error);
+      const message = result.error.message || "Authentication failed.";
+      if (/invalid login credentials/i.test(message)) {
+        errorBox.textContent = "Email or password is incorrect. If you just signed up, confirm your email first.";
+      } else if (/email not confirmed/i.test(message)) {
+        errorBox.textContent = "Please open the confirmation link sent to your email, then sign in.";
+      } else if (/already registered|user already exists/i.test(message)) {
+        errorBox.textContent = "An account with this email already exists. Switch to Sign in.";
+      } else if (/password should be at least|weak password/i.test(message)) {
+        errorBox.textContent = "Choose a stronger password that meets the password requirements.";
+      } else {
+        errorBox.textContent = message;
+      }
+      return;
+    }
+    if (state.authMode === "signup" && !result.data.session) {
+      errorBox.textContent = "Account created. Check your email for the confirmation link, then return here and sign in. Check spam if it doesn't arrive.";
+      return;
+    }
+    if (!result.data.user) {
+      errorBox.textContent = "Authentication did not return a user. Please try again.";
+      return;
+    }
+    state.user = result.data.user;
+    $("authDialog").close();
+    accountUI();
+    await loadCloud();
+    toast("You're signed in.", "success");
+  } catch (err) {
+    console.error("Unexpected authentication error:", err);
+    errorBox.textContent = err?.message
+      ? "Could not reach the authentication service: " + err.message
+      : "Could not reach the authentication service. Check your connection and try again.";
+  } finally {
+    submit.disabled = false;
+    submit.textContent = state.authMode === "signup" ? "Create free account" : "Sign in";
+  }
+}
 function bind(){const showNew=()=>{$("newTitle").value="";$("newDialog").showModal();$("newTitle").focus();};$("newBtn").onclick=$("emptyNew").onclick=showNew;$("newForm").onsubmit=e=>{e.preventDefault();createProject($("newTitle").value,$("template").value);};$("sampleBtn").onclick=sampleScript;$("backBtn").onclick=()=>{view("dashboard");renderDashboard();};$("homeBtn").onclick=()=>{view("dashboard");renderDashboard();};$("guideBtn").onclick=()=>view("guide");$("guideBack").onclick=()=>view("dashboard");$("guideNew").onclick=showNew;$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");$("themeBtn").onclick=()=>{document.body.classList.toggle("light");localStorage.setItem("screenplay-theme",document.body.classList.contains("light")?"light":"dark");};$("accountBtn").onclick=account;$("authForm").onsubmit=authSubmit;$("authToggle").onclick=()=>{state.authMode=state.authMode==="signin"?"signup":"signin";$("authHeading").textContent=state.authMode==="signup"?"Create your free writer account.":"Save your stories anywhere.";$("authSubmit").textContent=state.authMode==="signup"?"Create free account":"Sign in";$("authToggle").textContent=state.authMode==="signup"?"Already have an account? Sign in":"New here? Create a free account";$("authError").textContent="";};$("localBtn").onclick=()=>$("authDialog").close();document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).close());$("title").oninput=()=>{const p=current();if(!p)return;p.title=$("title").value||"Untitled screenplay";$("crumb").textContent=p.title;stats();scheduleSave();renderDashboard();};["logline","genre","notes"].forEach(k=>$(k).oninput=scheduleSave);$("script").oninput=scheduleSave;$("script").onkeydown=e=>{if(e.key==="Tab"){e.preventDefault();const a=["action","scene","character","dialogue","parenthetical","transition"],next=a[(a.indexOf($("element").value)+1)%a.length];$("element").value=next;formatElement(next);}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();scheduleSave();toast("Draft saved.","success");}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="b"){e.preventDefault();document.execCommand("bold");}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="i"){e.preventDefault();document.execCommand("italic");}};$("element").onchange=()=>formatElement($("element").value);$("addScene").onclick=()=>addBlock("scene","INT. NEW LOCATION — DAY");$("fountainBtn").onclick=exportFountain;$("pdfBtn").onclick=exportPdf;$("helpBtn").onclick=()=>toast("Choose an element from the toolbar. Press Tab to cycle through screenplay elements.");$("focusBtn").onclick=()=>{document.body.classList.toggle("focus");$("focusBtn").classList.toggle("active");};$("boldBtn").onclick=()=>document.execCommand("bold");$("italicBtn").onclick=()=>document.execCommand("italic");$("undoBtn").onclick=()=>{if(!state.undo.length)return;$("script").innerHTML=state.undo.pop();scheduleSave();};document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===b));$("detailsPanel").classList.toggle("hidden",b.dataset.tab!=="detailsPanel");$("charactersPanel").classList.toggle("hidden",b.dataset.tab!=="charactersPanel");});}
 async function init(){state.projects=loadLocal().map(normalise);state.active=localStorage.getItem("screenplay-active-v1");bind();renderDashboard();if(localStorage.getItem("screenplay-theme")==="light")document.body.classList.add("light");if(state.active&&state.projects.some(p=>p.id===state.active))openProject(state.active);if(db){const {data:{session}}=await db.auth.getSession();state.user=session?.user||null;accountUI();if(state.user)await loadCloud();db.auth.onAuthStateChange((_event,session)=>{state.user=session?.user||null;accountUI();if(state.user)loadCloud();});}else accountUI();}
 init();
