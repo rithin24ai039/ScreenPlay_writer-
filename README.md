@@ -1,13 +1,13 @@
 # ScreenPlay
 
-A friendly screenplay-writing workspace built with HTML, CSS, and vanilla JavaScript. Supabase provides email/password accounts, JWT-backed sessions, and private cloud sync; guest drafts remain on this device.
+A friendly screenplay-writing workspace built with HTML, CSS, and vanilla JavaScript. Supabase provides email/password accounts, JWT-backed sessions, and private cloud storage. Sign-in is required to create and save screenplays; screenplay drafts are not stored in browser storage.
 
 ## Features
 
 - Multiple screenplay projects and sample script.
 - Scene headings, action, character cues, dialogue, parentheticals, and transitions.
 - Scene navigation, word/page estimates, character list, logline, genre, and notes.
-- Local autosave, dark/light theme, focus mode, and keyboard shortcuts.
+- Cloud autosave for signed-in users, dark/light theme, focus mode, and keyboard shortcuts.
 - Fountain export and browser print-to-PDF.
 - Supabase email/password authentication and owner-protected cloud sync.
 
@@ -29,7 +29,7 @@ The static site is deployed to Vercel at https://screenplay-writer-psi.vercel.ap
 
 ## Privacy and limitations
 
-Guest drafts stay in browser local storage. Browser data can be cleared, so export backups. Signed-in projects sync to Supabase and RLS restricts access to the owner. This version does not send scripts to an AI provider. PDF export uses the browser print dialog and page count is an estimate. Final Draft FDX, collaboration, and AI tools are not included yet.
+Sign-in is required to create or edit screenplays. Screenplay content is stored in Supabase only, with Row Level Security restricting access to the owner; it is not persisted in browser local storage. Theme preference may be stored locally. This version does not send scripts to an AI provider. PDF export uses the browser print dialog and page count is an estimate. Final Draft FDX, collaboration, and AI tools are not included yet.
 
 ## License
 
